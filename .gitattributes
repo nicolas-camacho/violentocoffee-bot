@@ -1,0 +1,14 @@
+* text=auto
+*.go text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.c text eol=lf
+Makefile text eol=lf
+.env.example text eol=lf
+*.ttf binary
+*.mp3 binary
+*.png binary
+*.3dsx binary
+*.elf binary
+*.smdh binary

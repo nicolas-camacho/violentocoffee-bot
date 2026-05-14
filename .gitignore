@@ -1,0 +1,30 @@
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+
+# ── Runtime data (generated at startup, contain user state) ──────────────────
+violentocoffee.db
+violentocoffee.db-shm
+violentocoffee.db-wal
+wordle.json
+lattepoints.json
+
+# ── Local config (environment-specific, not secrets but not shareable) ────────
+rewards.json
+sound_prices.json
+# .example files are tracked — do NOT ignore them
+!*.example
+
+# ── Compiled binaries ─────────────────────────────────────────────────────────
+*.exe
+/violentocoffee-bot
+/listrewards
+/gettoken
+
+# ── 3DS build artifacts ───────────────────────────────────────────────────────
+3ds-app/build/
+3ds-app/*.3dsx
+3ds-app/*.elf
+3ds-app/*.smdh
+
+# ── Go toolchain ──────────────────────────────────────────────────────────────
+/vendor/

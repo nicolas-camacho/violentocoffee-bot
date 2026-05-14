@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+@font-face {
+    font-family: 'DungeonMode';
+    src: url('/font/dungeon-mode.ttf') format('truetype');
+    font-display: block;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background: transparent;
+    overflow: hidden;
+    width: 1920px;
+    height: 1080px;
+    font-family: 'DungeonMode', 'Courier New', monospace;
+    font-size: 22px;
+    line-height: 1.35;
+    color: #FFF9E4;
+}
+
+.panel {
+    position: absolute;
+    background: rgba(8, 6, 14, 0.93);
+    padding: 0;
+    white-space: pre;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.panel.visible {
+    opacity: 1;
+}
+
+#panel-idle {
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#panel-boss {
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#panel-dungeon {
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#panel-chest {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+</style>
+</head>
+<body>
+
+<div id="panel-idle"    class="panel"></div>
+<div id="panel-boss"    class="panel"></div>
+<div id="panel-dungeon" class="panel"></div>
+<div id="panel-chest"   class="panel"></div>
+
+<script>
+// ─── Palette ──────────────────────────────────────────────────────────────────
+const P = {
+    gold:   '#FFB915',
+    cream:  '#FFF9E4',
+    red:    '#FF5777',
+    green:  '#57B067',
+    blue:   '#4772BF',
+    purple: '#9666EE',
+    dim:    '#5E526B',
+    yellow: '#FFE077',
+    dark:   '#181E2A',
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function span(text, color, bg) {
+    const style = `color:${color}${bg ? ';background:' + bg : ''}`;
+    return `<span style="${style}">${text}</span>`;
+}
+
+// pad based on visible char count (strips HTML tags)
+function vis(s) { return s.replace(/<[^>]*>/g, ''); }
+function pad(s, w, ch = ' ') {
+    const diff = w - vis(s).length;
+    return diff > 0 ? s + ch.repeat(diff) : s;
+}
+
+function hpBar(hp, maxHp, w = 22) {
+    const r = maxHp > 0 ? hp / maxHp : 0;
+    const f = Math.round(r * w);
+    const c = r > 0.5 ? P.green : r > 0.25 ? P.gold : P.red;
+    return span('█'.repeat(f), c) + span('░'.repeat(w - f), P.dim);
+}
+
+function timeBar(secsLeft, total, w = 22) {
+    const r = total > 0 ? secsLeft / total : 0;
+    const f = Math.round(r * w);
+    const c = r > 0.5 ? P.green : r > 0.25 ? P.gold : P.red;
+    return span('█'.repeat(f), c) + span('░'.repeat(w - f), P.dim);
+}
+
+// Build a box from rows. Row '---' becomes a separator.
+function box(w, rows) {
+    const B = (ch) => span(ch, P.dim);
+    const lines = [];
+    lines.push(B('╔') + B('═'.repeat(w - 2)) + B('╗'));
+    rows.forEach(r => {
+        if (r === '---') {
+            lines.push(B('╠') + B('═'.repeat(w - 2)) + B('╣'));
+        } else {
+            lines.push(B('║') + r + B('║'));
+        }
+    });
+    lines.push(B('╚') + B('═'.repeat(w - 2)) + B('╝'));
+    return lines.join('\n');
+}
+
+// ─── Renderers ────────────────────────────────────────────────────────────────
+const W_IDLE    = 30;
+const W_BOSS    = 38;
+const W_DUNGEON = 36;
+const W_CHEST   = 30;
+const INNER     = W => W - 2;
+
+function renderIdle(data) {
+    const iw = INNER(W_IDLE);
+    const header = pad(' ' + span('$ LATTEPOINTS', P.gold), iw);
+    const rows = [header, '---'];
+    const top = data.top || [];
+    if (top.length === 0) {
+        rows.push(pad(span('  sin datos aun', P.dim), iw));
+    } else {
+        top.forEach((e, i) => {
+            const medal = i === 0 ? P.gold : i === 1 ? '#C0C0C0' : P.dim;
+            const num  = span(`${i + 1}`, medal);
+            const name = span(e.username.substring(0, 14), P.cream);
+            const pts  = span(`${e.points}`, P.gold);
+            const row  = ` ${num} ${pad(name, 15)}${pad(pts, 7)} `;
+            rows.push(pad(row, iw));
+        });
+    }
+    return box(W_IDLE, rows);
+}
+
+function renderBoss(data) {
+    const b   = data.boss;
+    const iw  = INNER(W_BOSS);
+    const pct = b.maxHp > 0 ? Math.round((b.hp / b.maxHp) * 100) : 0;
+    const pctColor = pct > 50 ? P.green : pct > 25 ? P.gold : P.red;
+
+    const title  = pad(' ' + span('@', P.red) + '  ' + span(b.name.toUpperCase(), P.cream), iw);
+    const hpRow  = pad(' HP  ' + hpBar(b.hp, b.maxHp, 24), iw);
+    const hpNum  = pad(
+        '     ' + span(`${b.hp}`, P.cream) +
+        span(` / ${b.maxHp}`, P.dim) +
+        span(`  ${pct}%`, pctColor),
+        iw
+    );
+
+    const rows = [title, '---', hpRow, hpNum];
+
+    const attackers = b.attackers || [];
+    if (attackers.length > 0) {
+        rows.push('---');
+        attackers.slice(0, 5).forEach(a => {
+            const name = span(a.username.substring(0, 16), P.cream);
+            const dmg  = span(`-${a.damage}`, P.red);
+            rows.push(pad(` > ${pad(name, 18)}${pad(dmg, 9)} `, iw));
+        });
+    }
+    return box(W_BOSS, rows);
+}
+
+function renderDungeon(data) {
+    const d       = data.dungeon;
+    const iw      = INNER(W_DUNGEON);
+    const m       = Math.floor(d.secondsLeft / 60);
+    const s       = String(d.secondsLeft % 60).padStart(2, '0');
+    const tColor  = d.secondsLeft < 15 ? P.red : d.secondsLeft < 30 ? P.gold : P.green;
+    const timer   = span(`${m}:${s}`, tColor);
+    const party   = d.party || [];
+    const barW    = iw - 2;
+
+    const title    = pad(' # ' + span(d.name.toUpperCase(), P.yellow) + '  ' + timer, iw);
+    const bar      = pad(' ' + timeBar(d.secondsLeft, 60, barW), iw);
+    const partyCnt = pad(' PARTY: ' + span(String(party.length), P.gold) + span('  !dungeon para unirse', P.dim), iw);
+    const rows = [title, bar, '---', partyCnt];
+
+    if (party.length > 0) rows.push('---');
+    party.slice(0, 6).forEach(u => {
+        rows.push(pad(' > ' + span(u, P.cream), iw));
+    });
+    if (party.length > 6) {
+        rows.push(pad(span(`   +${party.length - 6} mas...`, P.dim), iw));
+    }
+    return box(W_DUNGEON, rows);
+}
+
+function renderChest(data) {
+    const c  = data.chest;
+    const iw = INNER(W_CHEST);
+    const rows = [];
+
+    if (c && c.secondsLeft > 0) {
+        const m      = Math.floor(c.secondsLeft / 60);
+        const s      = String(c.secondsLeft % 60).padStart(2, '0');
+        const tColor = c.secondsLeft <= 10 ? P.red : P.gold;
+        const barW   = iw - 2;
+        rows.push(pad(span('   $ COFRE MAGICO   ', P.gold), iw));
+        rows.push('---');
+        rows.push(pad(' ' + timeBar(c.secondsLeft, 30, barW), iw));
+        rows.push(pad('      ' + span(`${m}:${s}`, tColor) + '      ', iw));
+        rows.push(pad(span('  !cofre para abrir  ', P.cream), iw));
+    } else if (!c || !c.result) {
+        rows.push(pad(span('   $ COFRE MAGICO   ', P.gold), iw));
+        rows.push('---');
+        rows.push(pad(span('  !cofre para abrir  ', P.cream), iw));
+        rows.push(pad(span('   Tesoro o Mimico?  ', P.dim), iw));
+    } else if (c.result === 'treasure') {
+        rows.push(pad(span('   $ !TESORO!   ', P.gold), iw));
+        rows.push('---');
+        rows.push(pad('  ' + span(c.username, P.cream), iw));
+        rows.push(pad('  ' + span(`+${c.amount}`, P.gold) + span(' lattepoints', P.dim), iw));
+    } else {
+        rows.push(pad(span('   @ !MIMICO!   ', P.red), iw));
+        rows.push('---');
+        rows.push(pad('  ' + span(c.username, P.cream), iw));
+        rows.push(pad('  ' + span(`-${c.amount}`, P.red) + span(' lattepoints', P.dim), iw));
+    }
+    return box(W_CHEST, rows);
+}
+
+// ─── State machine ────────────────────────────────────────────────────────────
+const PANELS = ['idle', 'boss', 'dungeon', 'chest'];
+
+function showPanel(name, html) {
+    PANELS.forEach(p => {
+        const el = document.getElementById('panel-' + p);
+        if (p === name) {
+            el.innerHTML = html;
+            // Force reflow before adding class so transition fires
+            el.offsetHeight;
+            el.classList.add('visible');
+        } else {
+            el.classList.remove('visible');
+        }
+    });
+}
+
+function hideAll() {
+    PANELS.forEach(p => document.getElementById('panel-' + p).classList.remove('visible'));
+}
+
+function render(data) {
+    switch (data.state) {
+        case 'idle':    showPanel('idle',    renderIdle(data));    break;
+        case 'boss':    showPanel('boss',    renderBoss(data));    break;
+        case 'dungeon': showPanel('dungeon', renderDungeon(data)); break;
+        case 'chest':   showPanel('chest',   renderChest(data));   break;
+        default:        hideAll();
+    }
+}
+
+// ─── WebSocket ────────────────────────────────────────────────────────────────
+function connect() {
+    const port = location.port || '7373';
+    const ws   = new WebSocket(`ws://localhost:${port}/ws`);
+
+    ws.onopen    = () => console.log('[overlay] conectado');
+    ws.onmessage = e  => { try { render(JSON.parse(e.data)); } catch(err) { console.error(err); } };
+    ws.onclose   = ()  => { console.log('[overlay] reconectando...'); setTimeout(connect, 2000); };
+    ws.onerror   = ()  => ws.close();
+}
+
+connect();
+</script>
+</body>
+</html>
