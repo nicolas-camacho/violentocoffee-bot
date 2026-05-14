@@ -90,6 +90,8 @@ func main() {
 			handleWordle(client, channel, msg)
 		case "!help":
 			handleHelp(client, channel)
+		case "!comandos", "!commands":
+			client.Say(channel, "☕ Todos los comandos: https://nicolas-camacho.github.io/violentocoffee-bot/")
 		case "!3ds":
 			response := handleSend3DS(parts, msg.User.Name)
 			client.Say(channel, response)

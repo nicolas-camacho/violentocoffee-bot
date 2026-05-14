@@ -21,6 +21,7 @@ var helpCommands = []string{
 	"!dungeon       → unirse a la mazmorra (cuando hay mazmorra activa)",
 	"!cofre         → abrir el cofre mágico (cuando aparece uno)",
 	"!help          → lista de comandos",
+	"!comandos      → página completa con todos los comandos y tabla de armas",
 }
 
 func handleHelp(client *twitch.Client, channel string) {
