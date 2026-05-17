@@ -371,6 +371,36 @@ func rollAndTrigger() {
 	}
 }
 
+func handleCancelEvent() {
+	rpgMu.Lock()
+	defer rpgMu.Unlock()
+	if rpgState == StateIdle {
+		return
+	}
+	var msg string
+	switch rpgState {
+	case StateBoss:
+		msg = bossEscapeMsg + " (evento cancelado por el streamer)"
+		activeBoss = nil
+		bossAttackers = nil
+		attackCooldowns = nil
+		attackCounts = nil
+		activeBossPhases = nil
+		activeEffects = nil
+	case StateDungeon:
+		msg = "🏰 La mazmorra fue cancelada. Nadie murió. Esta vez."
+		activeDungeon = nil
+		dungeonParty = nil
+		dungeonWeapons = nil
+	case StateChest:
+		msg = "📦 El cofre desapareció sin ser abierto."
+		chestOpeners = nil
+	}
+	rpgState = StateIdle
+	broadcastOverlay(OverlayState{State: "idle"})
+	rpgSay(msg)
+}
+
 func handleManualEvent(parts []string) {
 	rpgMu.Lock()
 	defer rpgMu.Unlock()

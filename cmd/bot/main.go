@@ -107,6 +107,10 @@ func main() {
 			if msg.User.Name == channel {
 				handleManualEvent(parts)
 			}
+		case "!cancelar", "!cancel":
+			if msg.User.Name == channel {
+				handleCancelEvent()
+			}
 		case "!atacar", "!attack":
 			handleAttack(msg.User.Name)
 		case "!dungeon", "!mazmorra":
