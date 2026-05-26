@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
@@ -34,6 +36,57 @@ func soundPrice(name string) int {
 		return cost
 	}
 	return defaultSoundCost
+}
+
+var (
+	chatterMu      sync.RWMutex
+	activeChatters = make(map[string]bool)
+)
+
+func trackChatter(username string) {
+	chatterMu.Lock()
+	activeChatters[username] = true
+	chatterMu.Unlock()
+}
+
+func handleGive(parts []string) string {
+	if len(parts) < 2 {
+		return "Uso: !dar <cantidad> | !dar <usuario> <cantidad>"
+	}
+
+	// !dar <amount> → todos los chatters activos
+	if amount, err := strconv.Atoi(parts[1]); err == nil {
+		if amount <= 0 {
+			return "La cantidad debe ser mayor a 0."
+		}
+		chatterMu.RLock()
+		chatters := make([]string, 0, len(activeChatters))
+		for u := range activeChatters {
+			chatters = append(chatters, u)
+		}
+		chatterMu.RUnlock()
+		if len(chatters) == 0 {
+			return "No hay chatters activos registrados aún."
+		}
+		rewards := make(map[string]int, len(chatters))
+		for _, u := range chatters {
+			rewards[u] = amount
+		}
+		bulkAddPoints(rewards)
+		return fmt.Sprintf("☕ +%d lattepoints para los %d del chat!", amount, len(chatters))
+	}
+
+	// !dar <user> <amount> → usuario individual
+	if len(parts) < 3 {
+		return "Uso: !dar <cantidad> | !dar <usuario> <cantidad>"
+	}
+	username := strings.ToLower(strings.TrimPrefix(parts[1], "@"))
+	amount, err := strconv.Atoi(parts[2])
+	if err != nil || amount <= 0 {
+		return "La cantidad debe ser un número mayor a 0."
+	}
+	addPoints(username, amount)
+	return fmt.Sprintf("☕ @%s recibió +%d lattepoints!", username, amount)
 }
 
 func handlePoints(username string) string {

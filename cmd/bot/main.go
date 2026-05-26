@@ -71,6 +71,7 @@ func main() {
 	startRPGEventLoop(func(m string) { client.Say(channel, m) })
 
 	client.OnPrivateMessage(func(msg twitch.PrivateMessage) {
+		trackChatter(msg.User.Name)
 		text := strings.TrimSpace(msg.Message)
 		if !strings.HasPrefix(text, "!") {
 			return
@@ -113,6 +114,10 @@ func main() {
 		case "!cancelar", "!cancel":
 			if msg.User.Name == channel {
 				handleCancelEvent()
+			}
+		case "!dar", "!give":
+			if msg.User.Name == channel {
+				client.Say(channel, handleGive(parts))
 			}
 		case "!atacar", "!attack":
 			handleAttack(msg.User.Name)
