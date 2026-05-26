@@ -101,6 +101,7 @@ La palabra cambia cuando el broadcaster actualiza `WORDLE_WORD` en `.env` y rein
 | Comando | Descripción |
 |---|---|
 | `!evento [boss\|dungeon\|cofre]` | Forzar evento RPG inmediatamente |
+| `!cancelar` / `!cancel` | Cancelar el evento RPG activo y volver a idle |
 | `!ovtest [boss\|dungeon\|chest\|treasure\|mimic]` | Vista previa del overlay sin afectar el juego |
 
 ## Tabla de armas
@@ -113,16 +114,26 @@ Sin arma equipada el jugador hace 10 de daño base. Crit base: 5% de probabilida
 | daga | 15 | 100 pts | +8% | — |
 | espada | 25 | 200 pts | — | — |
 | arco | 28 | 300 pts | +12% | — |
+| estilete | 18 | 350 pts | +25% | — |
 | hacha | 40 | 400 pts | — | +0.5× |
 | ballesta | 33 | 450 pts | +8% | +0.3× |
 | lanza | 45 | 500 pts | — | — |
-| estilete | 18 | 350 pts | +25% | — |
 | báculo | 50 | 600 pts | — | +1.0× |
 | katana | 35 | 650 pts | +15% | +0.5× |
-| maul | 65 | 900 pts | — | +0.8× |
 | arco_larg | 42 | 800 pts | +18% | +0.5× |
+| maul | 65 | 900 pts | — | +0.8× |
+| mandoble | 75 | 1.200 pts | — | +1.0× |
+| grimorio | 60 | 1.500 pts | +5% | +1.5× |
+| flamberge | 80 | 2.000 pts | +10% | +0.8× |
+| runas | 90 | 3.500 pts | — | +2.0× |
+| espada_sagrada | 100 | 5.000 pts | +8% | +1.5× |
+| canon | 130 | 10.000 pts | — | +0.5× |
+| laser | 160 | 25.000 pts | +15% | +1.0× |
+| **evacoffee ☕** | **250** | **1.000.000 pts** | **+25%** | **+3.0×** |
 
 CC bonus = porcentaje de crítico adicional al 5% base. CX bonus = multiplicador adicional al 2.0× base.
+
+> **evacoffee**: arma legendaria. Crit total: 30% / 5.0× multiplicador.
 
 ## Sistema RPG
 
@@ -161,6 +172,7 @@ El broadcaster puede forzar cualquier evento con `!evento`.
 - Al cerrar la ventana, se suma el daño de todas las armas equipadas
 - Si el poder total supera la resistencia: **+150 lattepoints** por participante
 - Si no supera: sin recompensa
+- **La resistencia escala con viewers**: `resistencia final = base + viewers × 15`. A más espectadores, mazmorra más difícil.
 
 ### Cofres mágicos
 
