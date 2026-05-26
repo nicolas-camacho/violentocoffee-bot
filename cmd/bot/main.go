@@ -39,6 +39,9 @@ func main() {
 	if broadcasterToken == "" {
 		broadcasterToken = strings.TrimPrefix(oauthToken, "oauth:")
 	}
+	helixClientID = clientID
+	helixToken = broadcasterToken
+	startViewerCountPoller()
 	if clientID == "" || broadcasterToken == "" {
 		log.Println("[eventsub] TWITCH_CLIENT_ID o TWITCH_BROADCASTER_TOKEN no configurados — rewards desactivados")
 	} else {

@@ -35,8 +35,16 @@ var defaultWeapons = []Weapon{
 	{Name: "estilete",  Damage: 18, Price: 350, CritChance: 25, CritMult: 0.0},
 	{Name: "baculo",    Damage: 50, Price: 600, CritChance:  0, CritMult: 1.0},
 	{Name: "katana",    Damage: 35, Price: 650, CritChance: 15, CritMult: 0.5},
-	{Name: "maul",      Damage: 65, Price: 900, CritChance:  0, CritMult: 0.8},
-	{Name: "arco_larg", Damage: 42, Price: 800, CritChance: 18, CritMult: 0.5},
+	{Name: "maul",           Damage:  65, Price:     900, CritChance:  0, CritMult: 0.8},
+	{Name: "arco_larg",      Damage:  42, Price:     800, CritChance: 18, CritMult: 0.5},
+	{Name: "mandoble",       Damage:  75, Price:    1200, CritChance:  0, CritMult: 1.0},
+	{Name: "grimorio",       Damage:  60, Price:    1500, CritChance:  5, CritMult: 1.5},
+	{Name: "flamberge",      Damage:  80, Price:    2000, CritChance: 10, CritMult: 0.8},
+	{Name: "runas",          Damage:  90, Price:    3500, CritChance:  0, CritMult: 2.0},
+	{Name: "espada_sagrada", Damage: 100, Price:    5000, CritChance:  8, CritMult: 1.5},
+	{Name: "canon",          Damage: 130, Price:   10000, CritChance:  0, CritMult: 0.5},
+	{Name: "laser",          Damage: 160, Price:   25000, CritChance: 15, CritMult: 1.0},
+	{Name: "evacoffee",      Damage: 250, Price: 1000000, CritChance: 25, CritMult: 3.0},
 }
 
 func initDB() {

@@ -7,10 +7,54 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+var (
+	helixClientID string
+	helixToken    string
+	viewerCount   atomic.Int32
+)
+
+func fetchViewerCount() int {
+	if helixClientID == "" || helixToken == "" {
+		return 0
+	}
+	req, err := http.NewRequest("GET", "https://api.twitch.tv/helix/streams?user_login="+broadcasterName, nil)
+	if err != nil {
+		return 0
+	}
+	req.Header.Set("Client-Id", helixClientID)
+	req.Header.Set("Authorization", "Bearer "+helixToken)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0
+	}
+	defer resp.Body.Close()
+	var result struct {
+		Data []struct {
+			ViewerCount int `json:"viewer_count"`
+		} `json:"data"`
+	}
+	if json.NewDecoder(resp.Body).Decode(&result) != nil || len(result.Data) == 0 {
+		return 0
+	}
+	return result.Data[0].ViewerCount
+}
+
+func startViewerCountPoller() {
+	go func() {
+		for {
+			if n := fetchViewerCount(); n > 0 {
+				viewerCount.Store(int32(n))
+			}
+			time.Sleep(60 * time.Second)
+		}
+	}()
+}
 
 const eventsubWSURL = "wss://eventsub.wss.twitch.tv/ws"
 

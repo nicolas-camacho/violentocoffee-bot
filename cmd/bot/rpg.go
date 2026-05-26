@@ -466,7 +466,11 @@ func triggerBoss() {
 
 func triggerDungeon() {
 	entry := dungeonCatalog[rand.Intn(len(dungeonCatalog))]
-	currentDungeonResist = entry.resist + rand.Intn(entry.resist/2+1)
+	baseResist := entry.resist + rand.Intn(entry.resist/2+1)
+	viewers := int(viewerCount.Load())
+	viewerBonus := viewers * 15
+	currentDungeonResist = baseResist + viewerBonus
+
 	activeDungeon = &DungeonInfo{
 		Name:        entry.name,
 		SecondsLeft: int(dungeonDuration.Seconds()),
@@ -479,6 +483,9 @@ func triggerDungeon() {
 	rpgState = StateDungeon
 	broadcastOverlay(OverlayState{State: "dungeon", Dungeon: activeDungeon})
 	rpgSay(entry.summon)
+	if viewers > 0 {
+		rpgSay(fmt.Sprintf("🏰 %d viewers en stream → resistencia +%d extra (total: %d). ¡Uníos!", viewers, viewerBonus, currentDungeonResist))
+	}
 
 	go func() {
 		ticker := time.NewTicker(time.Second)
